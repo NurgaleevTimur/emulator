@@ -1,33 +1,28 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude
+CXX := g++
+CXXFLAGS := -std=c++17 -Wall -Wextra -MMD -MP -Iinclude
 
-TARGET = appendix/emulator.exe
-OBJDIR = appendix
+TARGET := appendix/emulator.exe
+OBJDIR := appendix
+SRCDIR := src
 
-OBJ = $(OBJDIR)/main.o \
-      $(OBJDIR)/CPU.o \
-      $(OBJDIR)/mem.o \
-      $(OBJDIR)/parser.o
+VPATH := $(SRCDIR)
+
+SRC := $(wildcard $(SRCDIR)/*.cpp) main.cpp
+OBJ := $(addprefix $(OBJDIR)/, $(notdir $(SRC:.cpp=.o)))
+DEPS := $(OBJ:.o=.d)
 
 all: $(TARGET)
 
 $(OBJDIR):
-	if not exist $(OBJDIR) mkdir $(OBJDIR)
+	@if not exist $(OBJDIR) mkdir $(OBJDIR)
+
+$(OBJDIR)/%.o: %.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJ)
 	$(CXX) $(OBJ) -o $(TARGET)
 
-$(OBJDIR)/main.o: main.cpp | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJDIR)/CPU.o: src/CPU.cpp | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJDIR)/mem.o: src/mem.cpp | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJDIR)/parser.o: src/parser.cpp | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+-include $(DEPS)
 
 clean:
 	if exist $(OBJDIR) rmdir /S /Q $(OBJDIR)
